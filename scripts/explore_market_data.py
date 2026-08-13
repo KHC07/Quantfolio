@@ -1,4 +1,3 @@
-import yfinance as yf
 from quantfolio.data.market_data import MarketDataProvider
 
 provider = MarketDataProvider()
