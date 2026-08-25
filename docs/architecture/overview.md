@@ -49,6 +49,7 @@ The current code does not yet connect these steps through a service or applicati
 
 - [Asset Domain Model](asset-model.md)
 - [Portfolio Domain Model](portfolio-model.md)
+- [Portfolio Analytics](portfolio-analytics.md)
 - [Market Data](market-data.md)
 - [Return Calculations](return-calculations.md)
 - [Risk Analysis](risk-analysis.md)
