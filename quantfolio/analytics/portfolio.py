@@ -85,3 +85,33 @@ def calculate_portfolio_volatility(weights, covariance_matrix):
     portfolio_volatility = np.sqrt(portfolio_variance)
 
     return portfolio_volatility
+
+def calculate_historical_portfolio_returns(weights, historical_returns):
+    if not historical_returns:
+        raise ValueError("Historical returns cannot be empty.")
+
+    assets = list(historical_returns.keys())
+
+    if set(weights.keys()) != set(assets):
+        raise ValueError("Weights and historical returns must contain the same assets.")
+
+    number_of_periods = len(historical_returns[assets[0]])
+
+    for asset in assets:
+        if len(historical_returns[asset]) != number_of_periods:
+            raise ValueError("All assets must have the same number of return observations.")
+
+    portfolio_returns = []
+
+    for period in range(number_of_periods):
+        period_return = 0
+
+        for asset in assets:
+            period_return += (
+                weights[asset] *
+                historical_returns[asset][period]
+            )
+
+        portfolio_returns.append(period_return)
+
+    return portfolio_returns

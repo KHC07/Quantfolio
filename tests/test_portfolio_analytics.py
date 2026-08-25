@@ -9,7 +9,8 @@ from quantfolio.analytics.portfolio import (
     calculate_portfolio_return,
     calculate_covariance_matrix,
     calculate_portfolio_variance,
-    calculate_portfolio_volatility
+    calculate_portfolio_volatility,
+    calculate_historical_portfolio_returns
 )
 
 # ==============================================================================
@@ -542,3 +543,58 @@ def test_calculate_portfolio_volatility_with_mismatched_dimensions():
 
     with pytest.raises(ValueError):
         calculate_portfolio_volatility(weights, covariance_matrix)
+
+
+
+# ==============================================================================
+# calculate_historical_portfolio_returns() TESTS
+# ==============================================================================
+def test_calculate_historical_portfolio_returns():
+    weights = {
+        "VFV": 0.6,
+        "NVDA": 0.4,
+    }
+
+    historical_returns = {
+        "VFV": [0.10, -0.05, 0.02],
+        "NVDA": [0.20, -0.10, 0.04],
+    }
+
+    actual = calculate_historical_portfolio_returns(weights, historical_returns)
+
+    expected = [0.14, -0.07, 0.028,]
+
+    np.testing.assert_allclose(actual, expected)
+
+
+def test_calculate_historical_portfolio_returns_empty_returns():
+    weights = {"VFV": 0.6, "NVDA": 0.4,}
+
+    historical_returns = {}
+
+    with pytest.raises(ValueError, match="Historical returns cannot be empty."):
+        calculate_historical_portfolio_returns(weights, historical_returns)
+
+
+def test_calculate_historical_portfolio_returns_mismatched_assets():
+    weights = {"VFV": 0.6, "NVDA": 0.4,}
+
+    historical_returns = {"VFV": [0.10, -0.05], "AMD": [0.20, -0.10],}
+
+    with pytest.raises(
+        ValueError,
+        match="Weights and historical returns must contain the same assets."
+    ):
+        calculate_historical_portfolio_returns(weights, historical_returns)
+
+
+def test_calculate_historical_portfolio_returns_different_lengths():
+    weights = {"VFV": 0.6, "NVDA": 0.4,}
+
+    historical_returns = {"VFV": [0.10, -0.05, 0.02], "NVDA": [0.20, -0.10],}
+
+    with pytest.raises(
+        ValueError,
+        match="All assets must have the same number of return observations."
+    ):
+        calculate_historical_portfolio_returns(weights, historical_returns)
