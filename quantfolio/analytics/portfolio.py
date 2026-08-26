@@ -107,10 +107,7 @@ def calculate_historical_portfolio_returns(weights, historical_returns):
         period_return = 0
 
         for asset in assets:
-            period_return += (
-                weights[asset] *
-                historical_returns[asset][period]
-            )
+            period_return += (weights[asset] * historical_returns[asset][period])
 
         portfolio_returns.append(period_return)
 

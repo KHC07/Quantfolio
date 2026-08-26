@@ -1,5 +1,11 @@
+import pandas as pd
+
 from quantfolio.models.asset import Asset
 from quantfolio.models.portfolio import Portfolio
+
+from quantfolio.data.market_data import MarketDataProvider
+
+from quantfolio.analytics.returns import calculate_returns
 
 from quantfolio.analytics.portfolio import (
     calculate_portfolio_value,
@@ -15,83 +21,87 @@ from quantfolio.analytics.risk import calculate_sharpe_ratio
 
 
 def main():
-
-    # Create assets
+    # Define the portfolio holdings.
     vfv = Asset("VFV", 20, 120)
     nvda = Asset("NVDA", 10, 180)
 
-    # Create portfolio
     portfolio = Portfolio()
-
     portfolio.add_asset(vfv)
     portfolio.add_asset(nvda)
 
-    # Current market prices
-    current_prices = {
-        "VFV": 135,
-        "NVDA": 200,
+    provider = MarketDataProvider()
+
+    # Download historical prices and align observations by trading date.
+    vfv_data = provider.get_historical_prices("VFV")
+    nvda_data = provider.get_historical_prices("NVDA")
+
+    vfv_close_prices = vfv_data["Close"].squeeze()
+    nvda_close_prices = nvda_data["Close"].squeeze()
+
+    prices = pd.DataFrame({"VFV": vfv_close_prices, "NVDA": nvda_close_prices}).dropna()
+
+    vfv_close_prices = prices["VFV"].tolist()
+    nvda_close_prices = prices["NVDA"].tolist()
+
+    # Calculate asset returns from the aligned price series.
+    vfv_returns = calculate_returns(vfv_close_prices)
+    nvda_returns = calculate_returns(nvda_close_prices)
+
+    historical_returns = {
+        "VFV": vfv_returns,
+        "NVDA": nvda_returns,
     }
 
-    # Calculate portfolio value
+    # Use the latest closing prices for portfolio valuation.
+    current_prices = {
+        "VFV": vfv_close_prices[-1],
+        "NVDA": nvda_close_prices[-1],
+    }
+
+    returns = {
+        "VFV": vfv_returns[-1],
+        "NVDA": nvda_returns[-1],
+    }
+
     portfolio_value = calculate_portfolio_value(
         portfolio,
-        current_prices
+        current_prices,
     )
 
-    # Calculate portfolio weights
     portfolio_weights = calculate_portfolio_weights(
         portfolio,
-        current_prices
+        current_prices,
     )
 
-    # Current asset returns
-    returns = {
-        "VFV": 0.10,
-        "NVDA": 0.20
-    }
-
-    # Calculate current portfolio return
     portfolio_return = calculate_portfolio_return(
         portfolio,
         current_prices,
-        returns
+        returns,
     )
 
-    # Historical returns for each asset
-    historical_returns = {
-        "VFV": [0.02, -0.01, 0.015, 0.01],
-        "NVDA": [0.03, -0.02, 0.025, 0.04]
-    }
-
-    # Calculate covariance matrix
     covariance_matrix = calculate_covariance_matrix(
-        historical_returns
+        historical_returns,
     )
 
-    # Calculate portfolio variance
     portfolio_variance = calculate_portfolio_variance(
         portfolio_weights,
-        covariance_matrix
+        covariance_matrix,
     )
 
-    # Calculate portfolio volatility
     portfolio_volatility = calculate_portfolio_volatility(
         portfolio_weights,
-        covariance_matrix
+        covariance_matrix,
     )
 
-    # Calculate historical portfolio returns
     historical_portfolio_returns = calculate_historical_portfolio_returns(
         portfolio_weights,
-        historical_returns
+        historical_returns,
     )
 
-    # Calculate Sharpe ratio
     sharpe_ratio = calculate_sharpe_ratio(
-        historical_portfolio_returns
+        historical_portfolio_returns,
     )
 
-    # Display portfolio report
     print()
     print("=" * 45)
     print("        QUANTFOLIO PORTFOLIO ANALYSIS")
@@ -108,13 +118,13 @@ def main():
 
     print()
     print("Performance:")
-    print(f"  Portfolio Return:     {portfolio_return:.2%}")
+    print(f"  Latest Portfolio Return: {portfolio_return:.2%}")
 
     print()
     print("Risk:")
-    print(f"  Portfolio Variance:   {portfolio_variance:.6f}")
-    print(f"  Portfolio Volatility: {portfolio_volatility:.2%}")
-    print(f"  Sharpe Ratio:         {sharpe_ratio:.2f}")
+    print(f"  Portfolio Variance:      {portfolio_variance:.6f}")
+    print(f"  Portfolio Volatility:    {portfolio_volatility:.2%}")
+    print(f"  Sharpe Ratio:             {sharpe_ratio:.2f}")
 
     print()
     print("=" * 45)
